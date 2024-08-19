@@ -15,7 +15,7 @@
 	url = https://github.com/AquaticEcoDynamics/libaed-benthic.git
 [submodule "glm-source/GLM"]
 	path = glm-source/GLM
-	url = https://github.com/AquaticEcoDynamics/GLM.git
+	url = https://github.com/rqthomas/GLM.git
 [submodule "glm-source/libaed-demo"]
 	path = glm-source/libaed-demo
 	url = https://github.com/AquaticEcoDynamics/libaed-demo.git
