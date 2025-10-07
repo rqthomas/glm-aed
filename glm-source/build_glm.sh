@@ -3,6 +3,7 @@
 cd GLM
 . ./GLM_CONFIG
 cd ..
+export CWD=`pwd`
 
 case `uname` in
   "Darwin"|"Linux"|"FreeBSD")
@@ -30,6 +31,9 @@ while [ $# -gt 0 ] ; do
     --debug)
       export DEBUG=true
       ;;
+    --checks)
+      export WITH_CHECKS=true
+      ;;
     --mdebug)
       export MDEBUG=true
       ;;
@@ -42,8 +46,14 @@ while [ $# -gt 0 ] ; do
     --gfort)
       export FC=gfortran
       ;;
+    --ifx)
+      export FC=ifx
+      ;;
     --ifort)
       export FC=ifort
+      ;;
+    --flang-new)
+      export FC=flang-new
       ;;
     --flang)
       export FC=flang
@@ -58,81 +68,13 @@ while [ $# -gt 0 ] ; do
   shift
 done
 
-if [ "$OSTYPE" = "Darwin" ] ; then
-  start_sh="$(ps -p "$$" -o  command= | awk '{print $1}')"
-  if [ "$start_sh" = "/bin/sh" ] ;  then
-     echo Restart using bash because MacOS cant use /bin/sh
-     /bin/bash $0 $ARGS
-     exit $?
-  fi
-
-  if [ "$HOMEBREW" = "" ] ; then
-    brew -v > /dev/null 2>&1
-    if [ $? != 0 ] ; then
-      which port > /dev/null 2>&1
-      if [ $? != 0 ] ; then
-        echo no ports and no brew
-      else
-        export MACPORTS=true
-      fi
-    else
-      CFLAGS+="$CFLAGS -I/usr/local/include -I/opt/homebrew/include"
-      export HOMEBREW=true
-    fi
-  fi
-fi
-
-# see if FC is defined, if not look for gfortran at least v8
-if [ "$FC" = "" ] ; then
-  gfortran -v > /dev/null 2>&1
-  if [ $? != 0 ] ; then
-    export FC=ifort
-  else
-    VERS=`gfortran -dumpversion | cut -d\. -f1`
-    if [ $VERS -ge 8 ] ; then
-      export FC=gfortran
-    else
-      gfortran-8 -v > /dev/null 2>&1
-      if [ $? != 0 ] ; then
-        export FC=ifort
-      else
-        export gfortran-8
-      fi
-    fi
-  fi
-fi
-
-if [ "$FC" = "ifort" ] ; then
-  if [ "$OSTYPE" = "Linux" ] ; then
-    start_sh="$(ps -p "$$" -o  command= | awk '{print $1}')"
-    # ifort config scripts wont work with /bin/sh
-    # so we restart using bash
-    if [ "$start_sh" = "/bin/sh" ] ;  then
-       echo Restart using bash because ifort cant use /bin/sh
-       /bin/bash $0 $ARGS
-       exit $?
-    fi
-  fi
-
-  if [ -x /opt/intel/setvars.sh ] ; then
-     . /opt/intel/setvars.sh
-  elif [ -d /opt/intel/oneapi ] ; then
-     . /opt/intel/oneapi/setvars.sh
-  elif [ -d /opt/intel/bin ] ; then
-     . /opt/intel/bin/compilervars.sh intel64
-  fi
-  which ifort > /dev/null 2>&1
-  if [ $? != 0 ] ; then
-     echo ifort compiler requested, but not found
-     exit 1
-  fi
-fi
-
 export F77=$FC
 export F90=$FC
 export F95=$FC
 
 export MPI=OPENMPI
+
+. ${CWD}/build_env.inc
 
 if [ "$AED2DIR" = "" ] ; then
   export AED2DIR=../libaed2
@@ -166,11 +108,11 @@ if [ "$FABM" = "true" ] ; then
     mkdir build
   fi
   cd build
-  export FFLAGS+=-fPIC
+# export FFLAGS="$FFLAGS -fPIC"
   if [ "${USE_DL}" = "true" ] ; then
-    cmake ${FABMDIR}/src -DBUILD_SHARED_LIBS=1 || exit 1
+    cmake ${FABMDIR} -DBUILD_SHARED_LIBS=1 || exit 1
   else
-    cmake ${FABMDIR}/src || exit 1
+    cmake ${FABMDIR} || exit 1
   fi
   ${MAKE} || exit 1
 fi
@@ -188,41 +130,9 @@ if [ "${AED2}" = "true" ] ; then
   fi
 fi
 
-if [ "${AED}" = "true" ] ; then
-  echo "build libaed-water"
-  cd "${CURDIR}/../libaed-water"
-  ${MAKE} || exit 1
-  DAEDWATDIR=`pwd`
-  if [ -d "${CURDIR}/../libaed-benthic" ] ; then
-    echo build libaed-benthic
-    cd "${CURDIR}/../libaed-benthic"
-    ${MAKE} || exit 1
-    DAEDBENDIR=`pwd`
-  fi
-  if [ -d "${CURDIR}/../libaed-demo" ] ; then
-    echo build libaed-demo
-    cd "${CURDIR}/../libaed-demo"
-    ${MAKE} || exit 1
-    DAEDDMODIR=`pwd`
-  fi
-  if [ -d "${CURDIR}/../libaed-riparian" ] ; then
-    echo build libaed-riparian
-    cd "${CURDIR}/../libaed-riparian"
-    ${MAKE} || exit 1
-    DAEDRIPDIR=`pwd`
-  fi
-  if [ -d "${CURDIR}/../libaed-light" ] ; then
-    echo build libaed-light
-    cd "${CURDIR}/../libaed-light"
-    ${MAKE} || exit 1
-    DAEDLGTDIR=`pwd`
-  fi
-  if [ -d "${CURDIR}/../libaed-dev" ] ; then
-    echo build libaed-dev
-    cd "${CURDIR}/../libaed-dev"
-    ${MAKE} || exit 1
-    DAEDDEVDIR=`pwd`
-  fi
+if [ "${AED}" = "true" ] || [ "${API}" = "true" ] ; then
+  export WITH_AED_PLUS='true'
+  . ${CWD}/build_aedlibs.inc
 fi
 
 if [ -d "${UTILDIR}" ] ; then
@@ -233,15 +143,15 @@ if [ -d "${UTILDIR}" ] ; then
 fi
 
 if [ "$OSTYPE" = "FreeBSD" ] ; then
-  echo making flang extras
-  cd ancillary/freebsd
-  ./fetch.sh
-  ${MAKE} || exit 1
+  echo not making flang extras
+  # cd ancillary/freebsd
+  # ./fetch.sh
+  # ${MAKE} || exit 1
 elif [ "$OSTYPE" = "Msys" ] ; then
-  if [ ! -d ancillary/windows/msys ] ; then
+  if [ ! -d ancillary/windows/lib ] ; then
     echo making windows ancillary extras
-    cd ancillary/windows/Sources
-    ./build_all.sh || exit 1
+    cd ancillary/windows
+    ./build.sh || exit 1
   fi
 fi
 
@@ -257,19 +167,28 @@ if [ -f obj/aed_external.o ] ; then
 fi
 
 # Update versions in resource files
-VERSION=`grep GLM_VERSION src/glm.h | cut -f2 -d\"`
+if [ -f src/glm.h ] ; then
+  VERSION=`grep GLM_VERSION src/glm.h | cut -f2 -d\"`
+else
+  VERSION=`grep GLM_VERSION include/glm.h | cut -f2 -d\"`
+fi
 cd "${CURDIR}/win"
 ${CURDIR}/vers.sh $VERSION
 #cd ${CURDIR}/win-dll
 #${CURDIR}/vers.sh $VERSION
 cd "${CURDIR}"
+get_commit_id >> ${CWD}/cur_state.log
 
+export LIBRARY_PATH=$LIB
 ${MAKE} AEDBENDIR=$DAEDBENDIR AEDDMODIR=$DAEDDMODIR || exit 1
 if [ "${DAEDDEVDIR}" != "" ] ; then
   if [ -d "${DAEDDEVDIR}" ] ; then
     echo now build plus version
     /bin/rm obj/aed_external.o
-    ${MAKE} glm+ AEDBENDIR=$DAEDBENDIR AEDDMODIR=$DAEDDMODIR AEDRIPDIR=$DAEDRIPDIR AEDLGTDIR=$DAEDLGTDIR AEDDEVDIR=$DAEDDEVDIR || exit 1
+    /bin/rm obj/glm_main.o
+    ${MAKE} glm+ WITH_AED_PLUS=1 AEDBENDIR=$DAEDBENDIR AEDDMODIR=$DAEDDMODIR \
+                                 AEDRIPDIR=$DAEDRIPDIR AEDLGTDIR=$DAEDLGTDIR \
+                                 AEDDEVDIR=$DAEDDEVDIR PHREEQDIR=$PHREEQDIR || exit 1
   fi
 fi
 
@@ -315,10 +234,11 @@ fi
 
 # ****************************** MacOS ********************************
 if [ "$OSTYPE" = "Darwin" ] ; then
-  MOSLINE=`grep 'SOFTWARE LICENSE AGREEMENT FOR ' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf'`
+  # MOSLINE=`grep 'SOFTWARE LICENSE AGREEMENT FOR ' "/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf"`
   # pre Lion :   MOSNAME=`echo ${MOSLINE} | awk -F 'Mac OS X ' '{print $NF}'  | tr -d '\\' | tr ' ' '_'`
   # pre Sierra : MOSNAME=`echo ${MOSLINE} | awk -F 'OS X ' '{print $NF}'  | tr -d '\\' | tr ' ' '_'`
-  MOSNAME=`echo ${MOSLINE} | awk -F 'macOS ' '{print $NF}'  | tr -d '\\' | tr ' ' '_'`
+  # MOSNAME=`echo ${MOSLINE} | awk -F 'macOS ' '{print $NF}'  | tr -d '\\' | tr ' ' '_'`
+  MOSNAME=`cat "/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf" | awk -F 'macOS ' '/SOFTWARE LICENSE AGREEMENT FOR/ {print $NF}' | tr -d '\\' | tr ' ' '_'`
 
   BINPATH="binaries/macos/${MOSNAME}"
   if [ ! -d "${BINPATH}" ] ; then
@@ -368,7 +288,8 @@ fi
 if [ "$OSTYPE" = "Msys" ] ; then
   cd ${CURDIR}/..
 
-  VERSION=`grep GLM_VERSION GLM/src/glm.h | cut -f2 -d\"`
+# VERSION=`grep GLM_VERSION GLM/src/glm.h | cut -f2 -d\"`
+# the above should alread exist
   BINPATH="binaries/windows"
 
   if [ ! -d "${BINPATH}" ] ; then
@@ -376,8 +297,8 @@ if [ "$OSTYPE" = "Msys" ] ; then
   fi
   mkdir glm_$VERSION
 
-  cp ancillary/windows/msys/bin/libnetcdf.dll glm_$VERSION
-  cp ancillary/windows/msys/bin/libgd.dll glm_$VERSION
+  cp ancillary/windows/bin/libnetcdf.dll glm_$VERSION
+  cp ancillary/windows/bin/libgd.dll glm_$VERSION
   for dll in libgfortran libgcc_s_seh libquadmath libwinpthread ; do
     dllp=`find /c/ProgramData/ -name $dll\*.dll 2> /dev/null | head -1`
     if [ "$dllp" != "" ] ; then
@@ -420,6 +341,7 @@ else
     /bin/mkdir ${BINPATH}/glm_latest
   fi
 fi
+cp cur_state.log ${BINPATH}/glm_latest/glm_source.versions
 echo "glm_$VERSION" > ${BINPATH}/glm_latest/VERSION
 /bin/cp ${CURDIR}/glm ${BINPATH}/glm_latest
 echo Generating ReleaseInfo.txt for glm
@@ -436,6 +358,7 @@ if [ -x ${CURDIR}/glm+ ] ; then
       /bin/mkdir ${BINPATH}/glm+_latest
     fi
   fi
+  cp cur_state.log ${BINPATH}/glm+_latest/glm+_source.versions
   echo "glm+_$VERSION" > ${BINPATH}/glm+_latest/VERSION
   /bin/cp ${CURDIR}/glm+ ${BINPATH}/glm+_latest
   echo Generating ReleaseInfo.txt for glm+
