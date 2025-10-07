@@ -232,8 +232,8 @@ jobs:
           cd $GITHUB_WORKSPACE/glm-source
           ./build_glm.sh
           MOSDIR=`grep 'SOFTWARE LICENSE AGREEMENT FOR ' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf' | awk -F 'macOS ' '{print $NF}' | tr -d '\\' | tr ' ' '_'`
-          mkdir -p $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}
-          cp -r $GITHUB_WORKSPACE/glm-source/binaries/macos/${MOSDIR}/* $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}/.
+          mkdir -p $GITHUB_WORKSPACE/binaries/macos/Tahoe
+          cp -r $GITHUB_WORKSPACE/glm-source/binaries/macos/Tahoe/* $GITHUB_WORKSPACE/binaries/macos/Tahoe/.
           rm cur_state.log
  
       - name: run GLM FCR
@@ -241,8 +241,8 @@ jobs:
         run: | 
           cd glm-examples/FCR
           MOSDIR=`grep 'SOFTWARE LICENSE AGREEMENT FOR ' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf' | awk -F 'macOS ' '{print $NF}' | tr -d '\\' | tr ' ' '_'`
-          echo now try running glm for ${MOSDIR}
-          $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}/glm_latest/glm
+          echo now try running glm for Tahoe
+          $GITHUB_WORKSPACE/binaries/macos/Tahoe/glm_latest/glm
           echo run completed
 
       - name: update binaries and push to remote
