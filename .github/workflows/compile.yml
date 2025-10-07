@@ -49,6 +49,7 @@ jobs:
            ./build_glm.sh
            mkdir -p $GITHUB_WORKSPACE/binaries/ubuntu/22.04
            cp -r $GITHUB_WORKSPACE/glm-source/binaries/ubuntu/22.04/* $GITHUB_WORKSPACE/binaries/ubuntu/22.04/.
+           rm cur_state.log
  
       - name: update binaries and push to remote
         run: |
@@ -92,6 +93,7 @@ jobs:
            ./build_glm.sh
            mkdir -p $GITHUB_WORKSPACE/binaries/ubuntu/24.04
            cp -r $GITHUB_WORKSPACE/glm-source/binaries/ubuntu/24.04/* $GITHUB_WORKSPACE/binaries/ubuntu/24.04/.
+           rm cur_state.log
  
       - name: update binaries and push to remote
         run: |
@@ -129,6 +131,7 @@ jobs:
           MOSDIR=`grep 'SOFTWARE LICENSE AGREEMENT FOR ' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf' | awk -F 'macOS ' '{print $NF}' | tr -d '\\' | tr ' ' '_'`
           mkdir -p $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}
           cp -r $GITHUB_WORKSPACE/glm-source/binaries/macos/${MOSDIR}/* $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}/.
+          rm cur_state.log
  
       - name: run GLM FCR
         shell: bash
@@ -176,6 +179,7 @@ jobs:
           MOSDIR=`grep 'SOFTWARE LICENSE AGREEMENT FOR ' '/System/Library/CoreServices/Setup Assistant.app/Contents/Resources/en.lproj/OSXSoftwareLicense.rtf' | awk -F 'macOS ' '{print $NF}' | tr -d '\\' | tr ' ' '_'`
           mkdir -p $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}
           cp -r $GITHUB_WORKSPACE/glm-source/binaries/macos/${MOSDIR}/* $GITHUB_WORKSPACE/binaries/macos/${MOSDIR}/.
+          rm cur_state.log
  
       - name: run GLM FCR
         shell: bash
@@ -228,6 +232,7 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/binaries/windows
           cd $GITHUB_WORKSPACE/glm-source/binaries/windows
           cp -r * $GITHUB_WORKSPACE/binaries/windows
+          rm cur_state.log
 
       - name: run GLM FCR
         shell: bash
