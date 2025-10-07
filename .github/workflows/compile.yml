@@ -94,6 +94,14 @@ jobs:
            mkdir -p $GITHUB_WORKSPACE/binaries/ubuntu/24.04
            cp -r $GITHUB_WORKSPACE/glm-source/binaries/ubuntu/24.04/* $GITHUB_WORKSPACE/binaries/ubuntu/24.04/.
            rm cur_state.log
+
+      - name: run GLM FCR
+        shell: bash
+        run: | 
+          cd glm-examples/FCR
+          echo now try running glm for ubuntu 24.04
+          $GITHUB_WORKSPACE/binaries/ubuntu/24.04/glm_latest/glm
+          echo run completed
  
       - name: update binaries and push to remote
         run: |
