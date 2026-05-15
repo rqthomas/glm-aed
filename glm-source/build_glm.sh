@@ -1,9 +1,29 @@
 #!/bin/sh
 
-cd GLM
-. ./GLM_CONFIG
-cd ..
-export CWD=`pwd`
+# CURDIR should be the directory of the project we are building
+export CURDIR=`pwd`/GLM
+# CWD should be the tools directory in which CURDIR lives
+export CWD=`dirname ${CURDIR}`
+
+#
+# These are defaults for glm
+#
+export WITH_AED=true
+export AED=true
+export WITH_AED_PLUS=false
+if [ -d ${CWD}/libaed-dev ] ; then
+  export WITH_AED_PLUS=true
+fi
+export WITH_API=true
+export API=true
+export USE_DL=false
+export WITH_PLOTS=true
+export WITH_XPLOTS=true
+export WITH_MPI=false
+
+
+export PLOTDIR=${CWD}/libplot
+export UTILDIR=${CWD}/libutil
 
 case `uname` in
   "Darwin"|"Linux"|"FreeBSD")
@@ -40,8 +60,17 @@ while [ $# -gt 0 ] ; do
     --fence)
       export FENCE=true
       ;;
-    --fabm)
-      export FABM=true
+    --with-aed)
+      export WITH_AED=true
+      ;;
+    --without-aed)
+      export WITH_AED=false
+      ;;
+    --with-aed-plus)
+      export WITH_AED_PLUS=true
+      ;;
+    --without-aed-plus)
+      export WITH_AED_PLUS=false
       ;;
     --gfort)
       export FC=gfortran
@@ -52,11 +81,14 @@ while [ $# -gt 0 ] ; do
     --ifort)
       export FC=ifort
       ;;
-    --flang-new)
-      export FC=flang-new
+    --clang)
+      export CC=clang
       ;;
     --flang)
       export FC=flang
+      ;;
+    --flang-new)
+      export FC=flang-new
       ;;
     --no-gui)
       export WITH_PLOTS=false
@@ -76,9 +108,6 @@ export MPI=OPENMPI
 
 . ${CWD}/build_env.inc
 
-if [ "$AED2DIR" = "" ] ; then
-  export AED2DIR=../libaed2
-fi
 if [ "$PLOTDIR" = "" ] ; then
   export PLOTDIR=../libplot
 fi
@@ -92,7 +121,7 @@ if [ "$FABM" = "true" ] ; then
     export FABM=false
   else
     which cmake > /dev/null 2>&1
-    if [ $? != 0 ] ; then
+    if [ $? -ne 0 ] ; then
       echo "cmake not found - FABM cannot be built"
       export FABM=false
     fi
@@ -117,21 +146,7 @@ if [ "$FABM" = "true" ] ; then
   ${MAKE} || exit 1
 fi
 
-if [ "${AED2}" = "true" ] ; then
-  cd "${AED2DIR}"
-  ${MAKE} || exit 1
-  cd ..
-  if [ "${AED2PLS}" != "" ] ; then
-    if [ -d "${AED2PLS}" ] ; then
-      cd "${AED2PLS}"
-      ${MAKE} || exit 1
-      cd ..
-    fi
-  fi
-fi
-
-if [ "${AED}" = "true" ] || [ "${API}" = "true" ] ; then
-  export WITH_AED_PLUS='true'
+if [ "${WITH_AED}" = "true" ] || [ "${WITH_API}" = "true" ] ; then
   . ${CWD}/build_aedlibs.inc
 fi
 
@@ -139,7 +154,7 @@ if [ -d "${UTILDIR}" ] ; then
   echo "making libutil"
   cd "${UTILDIR}"
   ${MAKE} || exit 1
-  cd "${CURDIR}/.."
+  cd "${CWD}"
 fi
 
 if [ "$OSTYPE" = "FreeBSD" ] ; then
@@ -148,9 +163,9 @@ if [ "$OSTYPE" = "FreeBSD" ] ; then
   # ./fetch.sh
   # ${MAKE} || exit 1
 elif [ "$OSTYPE" = "Msys" ] ; then
-  if [ ! -d ancillary/windows/lib ] ; then
+  if [ ! -d ancillary/lib ] ; then
     echo making windows ancillary extras
-    cd ancillary/windows
+    cd ancillary
     ./build.sh || exit 1
   fi
 fi
@@ -192,15 +207,16 @@ if [ "${DAEDDEVDIR}" != "" ] ; then
   fi
 fi
 
-cd "${CURDIR}/.."
+cd "${CWD}"
 
 # =====================================================================
 # Package building bit
 
 # ***************************** Linux *********************************
 if [ "$OSTYPE" = "Linux" ] ; then
-  if [ $(lsb_release -is) = Ubuntu ] ; then
-    BINPATH=binaries/ubuntu/$(lsb_release -rs)
+  RELEASE=`lsb_release -is | tr '[A-Z]' '[a-z]'`
+  if [ $RELEASE = ubuntu ] || [ $RELEASE = debian ] ; then
+    BINPATH=binaries/$RELEASE/$(lsb_release -rs)
     if [ ! -d "${BINPATH}" ] ; then
       mkdir -p "${BINPATH}"/
     fi
@@ -297,8 +313,8 @@ if [ "$OSTYPE" = "Msys" ] ; then
   fi
   mkdir glm_$VERSION
 
-  cp ancillary/windows/bin/libnetcdf.dll glm_$VERSION
-  cp ancillary/windows/bin/libgd.dll glm_$VERSION
+  cp ancillary/bin/libnetcdf.dll glm_$VERSION
+  cp ancillary/bin/libgd.dll glm_$VERSION
   for dll in libgfortran libgcc_s_seh libquadmath libwinpthread ; do
     dllp=`find /c/ProgramData/ -name $dll\*.dll 2> /dev/null | head -1`
     if [ "$dllp" != "" ] ; then
