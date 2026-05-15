@@ -16,7 +16,7 @@
 [submodule "glm-source/GLM"]
 	path = glm-source/GLM
 	url = https://github.com/AquaticEcoDynamics/GLM.git
-        branch = v4alpha
+	branch = v4alpha
 [submodule "glm-source/libaed-demo"]
 	path = glm-source/libaed-demo
 	url = https://github.com/AquaticEcoDynamics/libaed-demo.git
