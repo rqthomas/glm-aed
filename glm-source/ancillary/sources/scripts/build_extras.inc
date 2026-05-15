@@ -89,13 +89,17 @@ fi
 if [ ! -f "${FINALDIR}/lib/libhdf5.a" ] ; then
   echo "====== building $HDF5"
 
+  HDF5SRC=$HDF5
   \rm -rf $HDF5
   tar xzf $HDF5.tar.gz
-  if [ ! -d $HDF5 ] ; then
+  if [ ! -d "$HDF5SRC" ] ; then
+    HDF5SRC=`tar tzf $HDF5.tar.gz 2>/dev/null | head -1 | cut -f1 -d/`
+  fi
+  if [ "$HDF5SRC" = "" ] || [ ! -d "$HDF5SRC" ] ; then
     echo cant unpack $HDF5.tar.gz
     exit 1
   fi
-  cd $HDF5
+  cd $HDF5SRC
   mkdir build
   cd build
 
