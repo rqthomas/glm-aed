@@ -34,7 +34,8 @@ if [ ! -f ${HDF5}.tar.gz ] ; then
    if [ "${HVER}_${HMAJ}" = "2_1" ] ; then
       HDF5URL="https://support.hdfgroup.org/releases/hdf5/${HVER}.${HMAJ}.${HMIN}/downloads/${HDF5}.tar.gz"
    elif [ "${HMIN}" -ge "5" ] ; then
-      HDF5URL="https://support.hdfgroup.org/releases/hdf5/v${HVER}_${HMAJ}/v${HVER}_${HMAJ}_${HMIN}/downloads/${HDF5}.tar.gz"
+      # HDF Group changed GitHub release tag format to hdf5_X.Y.Z for versions >= 1.14.5
+      HDF5URL="https://github.com/HDFGroup/hdf5/releases/download/hdf5_${HDF5V}/${HDF5}.tar.gz"
    else
       HDF5VU=`echo ${HDF5V} | tr '.' '_'`
       HDF5URL="https://github.com/HDFGroup/hdf5/releases/download/hdf5-${HDF5VU}/${HDF5}.tar.gz"
