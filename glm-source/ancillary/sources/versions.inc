@@ -44,8 +44,8 @@ export LIBAECV=v1.1.4
 
 # https://support.hdfgroup.org/releases/hdf5/
 # https://support.hdfgroup.org/downloads/index.html
-#export HDF5V=2.1.1
-export HDF5V=1.14.6
+#export HDF5V=1.14.6
+export HDF5V=1.14.3
 
 #-----------------------------------------------------------
 
