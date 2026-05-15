@@ -103,6 +103,11 @@ if [ ! -f "${FINALDIR}/lib/libhdf5.a" ] ; then
   mkdir build
   cd build
 
+  HDF5_CMAKE_EXTRA_ARGS=
+  if [ "$OSTYPE" = "Msys" ] ; then
+    HDF5_CMAKE_EXTRA_ARGS="-DHDF5_ENABLE_NONSTANDARD_FEATURE_FLOAT16:BOOL=OFF"
+  fi
+
   cmake .. -G "Unix Makefiles" \
            -DCMAKE_FIND_ROOT_PATH="${FINALDIR}"  \
            -DBUILD_SHARED_LIBS:BOOL=OFF \
@@ -121,6 +126,7 @@ if [ ! -f "${FINALDIR}/lib/libhdf5.a" ] ; then
            -DSZIP_LIBRARY:PATH="${FINALDIR}/lib/libsz.a"  \
            -DHDF5_BUILD_CXX:BOOL=OFF \
            -DHDF5_BUILD_FORTRAN:BOOL=OFF \
+           ${HDF5_CMAKE_EXTRA_ARGS} \
            -DCMAKE_INSTALL_PREFIX="${FINALDIR}" -LAH > ${FINALDIR}/cmake-info-hdf5 2>&1
 
   if [ $? -ne 0 ] ; then
