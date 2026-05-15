@@ -239,7 +239,7 @@ fi
 export NETCDFHOME=${NCDFFBASE}
 
 if [ "$NEED_GD" = "true" ] ; then
-  if [ -f /usr/include/gd.h ] || [ -f ancillary/include/gd.h ] ; then
+  if [ -f /usr/include/gd.h ] || [ -f ancillary/include/gd.h ] || [ -f "${DEFAULTPATH}/include/gd.h" ] ; then
     NEED_GD=false
   fi
 fi

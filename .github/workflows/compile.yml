@@ -281,6 +281,7 @@ jobs:
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE/glm-source
+          chmod +x ancillary/build.sh ancillary/sources/build_all.sh ancillary/sources/fetch_all.sh ancillary/sources/clean_all.sh
           ./build_glm.sh
           mkdir -p $GITHUB_WORKSPACE/binaries/windows
           cd $GITHUB_WORKSPACE/glm-source/binaries/windows
