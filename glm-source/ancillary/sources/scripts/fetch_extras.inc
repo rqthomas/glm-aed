@@ -31,14 +31,16 @@ if [ ! -f ${HDF5}.tar.gz ] ; then
    HVER=`echo ${HDF5V} | cut -f1 -d\.`
    HMAJ=`echo ${HDF5V} | cut -f2 -d\.`
    HMIN=`echo ${HDF5V} | cut -f3 -d\.`
-   HDFDV="HDF5_${HVER}_${HMAJ}_${HMIN}"
    if [ "${HVER}_${HMAJ}" = "2_1" ] ; then
       HDF5URL="https://support.hdfgroup.org/releases/hdf5/${HVER}.${HMAJ}.${HMIN}/downloads/${HDF5}.tar.gz"
-   else
+   elif [ "${HMIN}" -ge "5" ] ; then
       HDF5URL="https://support.hdfgroup.org/releases/hdf5/v${HVER}_${HMAJ}/v${HVER}_${HMAJ}_${HMIN}/downloads/${HDF5}.tar.gz"
+   else
+      HDF5VU=`echo ${HDF5V} | tr '.' '_'`
+      HDF5URL="https://github.com/HDFGroup/hdf5/releases/download/hdf5-${HDF5VU}/${HDF5}.tar.gz"
    fi
    echo fetching ${HDF5}.tar.gz from \"${HDF5URL}\"
-   curl ${MINUS_K}  -L ${HDF5URL} -o ${HDF5}.tar.gz
+   curl ${MINUS_K} -L ${HDF5URL} -o ${HDF5}.tar.gz
    if [ $? -ne 0 ] ; then
       echo failed to fetch ${HDF5}.tar.gz
       exit 1
